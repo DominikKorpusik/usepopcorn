@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import NavBar from "./NavBar";
 import Main from "./Main";
@@ -7,6 +7,7 @@ import Results from "./Results";
 import { ListBox } from "./ListBox";
 import { GeneralList } from "./GeneralList.js";
 import { WatchedSummary, WatchedMoviesList } from "./WatchedMoviesList.js";
+const API_KEY = "476a4d73";
 
 export const tempMovieData = [
   {
@@ -56,8 +57,35 @@ export const tempWatchedData = [
 ];
 
 export default function App() {
-  const [movies, setMovies] = useState(tempMovieData);
-  const [watched, setWatched] = useState(tempWatchedData);
+  const [movies, setMovies] = useState([]);
+  const [watched, setWatched] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  // const query = "interstellar";
+  const query = "asfasafs";
+
+  useEffect(() => {
+    async function fetchMovies() {
+      try {
+        setIsLoading(true);
+        const res = await fetch(
+          `http://www.omdbapi.com/?apikey=${API_KEY}&S=${query}`
+        );
+        if (!res.ok) throw new Error("Network response was not ok");
+
+        const data = await res.json();
+        if (data.Response === "False") throw new Error(data.Error);
+        setMovies(data.Search);
+      } catch (err) {
+        console.error(err.message);
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchMovies();
+  }, []);
 
   return (
     <>
@@ -67,7 +95,10 @@ export default function App() {
       </NavBar>
       <Main>
         <ListBox>
-          <GeneralList movies={movies} />
+          {/* {isLoading ? <Loader /> : <GeneralList movies={movies} />} */}
+          {isLoading && <Loader />}
+          {!isLoading && !error && <GeneralList movies={movies} />}
+          {error && <ErrorMessage error={error} />}
         </ListBox>
         <ListBox>
           <WatchedSummary watched={watched} />
@@ -75,5 +106,18 @@ export default function App() {
         </ListBox>
       </Main>
     </>
+  );
+}
+
+function Loader() {
+  return <p className="loader">Loading...</p>;
+}
+
+function ErrorMessage({ error }) {
+  return (
+    <p className="error">
+      <span>🧰</span>
+      {error}
+    </p>
   );
 }
