@@ -1,16 +1,20 @@
-export function GeneralList({ movies }) {
+export function GeneralList({ movies, onSelectMovie }) {
   return (
-    <ul className="list">
+    <ul className="list list-movies">
       {movies?.map((movie) => (
-        <GeneralListItem movie={movie} key={movie.imdbID} />
+        <GeneralListItem
+          movie={movie}
+          key={movie.imdbID}
+          onSelectMovie={onSelectMovie}
+        />
       ))}
     </ul>
   );
 }
 
-export function GeneralListItem({ movie }) {
+export function GeneralListItem({ movie, onSelectMovie }) {
   return (
-    <li>
+    <li onClick={() => onSelectMovie(movie.imdbID)}>
       <img src={movie.Poster} alt={`${movie.Title} poster`} />
       <h3>{movie.Title}</h3>
       <div>

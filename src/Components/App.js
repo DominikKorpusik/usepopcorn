@@ -7,7 +7,8 @@ import Results from "./Results";
 import { ListBox } from "./ListBox";
 import { GeneralList } from "./GeneralList.js";
 import { WatchedSummary, WatchedMoviesList } from "./WatchedMoviesList.js";
-const API_KEY = "476a4d73";
+import { MovieDetails } from "./MovieDetails.js";
+export const API_KEY = "476a4d73";
 
 export const tempMovieData = [
   {
@@ -36,9 +37,9 @@ export const tempMovieData = [
 export const tempWatchedData = [
   {
     imdbID: "tt1375666",
-    Title: "Inception",
-    Year: "2010",
-    Poster:
+    title: "Inception",
+    year: "2010",
+    poster:
       "https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_SX300.jpg",
     runtime: 148,
     imdbRating: 8.8,
@@ -46,9 +47,9 @@ export const tempWatchedData = [
   },
   {
     imdbID: "tt0088763",
-    Title: "Back to the Future",
-    Year: "1985",
-    Poster:
+    title: "Back to the Future",
+    year: "1985",
+    poster:
       "https://m.media-amazon.com/images/M/MV5BZmU0M2Y1OGUtZjIxNi00ZjBkLTg1MjgtOWIyNThiZWIwYjRiXkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_SX300.jpg",
     runtime: 116,
     imdbRating: 8.5,
@@ -58,16 +59,35 @@ export const tempWatchedData = [
 
 export default function App() {
   const [movies, setMovies] = useState([]);
-  const [watched, setWatched] = useState([]);
+  const [watched, setWatched] = useState(tempWatchedData);
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  // const query = "interstellar";
-  const query = "asfasafs";
+  const [query, setQuery] = useState("");
+
+  const [selectedId, setSelectedId] = useState(null);
+
+  function handleSelectMovie(id) {
+    setSelectedId((currId) => (currId === id ? null : id));
+  }
+
+  function handleCloseMovie() {
+    setSelectedId(null);
+  }
+
+  function handleAddWatched(movie) {
+    setWatched((watched) => [...watched, movie]);
+  }
+
+  function handleDeleteWatched(id) {
+    setWatched((watched) => watched.filter((movie) => movie.imdbID !== id));
+  }
 
   useEffect(() => {
     async function fetchMovies() {
       try {
         setIsLoading(true);
+        setError("");
         const res = await fetch(
           `http://www.omdbapi.com/?apikey=${API_KEY}&S=${query}`
         );
@@ -83,33 +103,53 @@ export default function App() {
         setIsLoading(false);
       }
     }
-
+    if (query.length < 2) {
+      setMovies([]);
+      setError("");
+      return;
+    }
     fetchMovies();
-  }, []);
+  }, [query]);
 
   return (
     <>
       <NavBar>
-        <Search />
+        <Search query={query} setQuery={setQuery} />
         <Results movies={movies} />
       </NavBar>
       <Main>
         <ListBox>
           {/* {isLoading ? <Loader /> : <GeneralList movies={movies} />} */}
           {isLoading && <Loader />}
-          {!isLoading && !error && <GeneralList movies={movies} />}
+          {!isLoading && !error && (
+            <GeneralList movies={movies} onSelectMovie={handleSelectMovie} />
+          )}
           {error && <ErrorMessage error={error} />}
         </ListBox>
         <ListBox>
-          <WatchedSummary watched={watched} />
-          <WatchedMoviesList watched={watched} />
+          {selectedId ? (
+            <MovieDetails
+              watched={watched}
+              selectedId={selectedId}
+              onCloseMovie={handleCloseMovie}
+              onAddWatched={handleAddWatched}
+            />
+          ) : (
+            <>
+              <WatchedSummary watched={watched} />
+              <WatchedMoviesList
+                watched={watched}
+                onDeleteWatched={handleDeleteWatched}
+              />
+            </>
+          )}
         </ListBox>
       </Main>
     </>
   );
 }
 
-function Loader() {
+export function Loader() {
   return <p className="loader">Loading...</p>;
 }
 
