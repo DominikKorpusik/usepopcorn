@@ -14,7 +14,6 @@ export function MovieDetails({
   const isWatched = watched.find(
     (movie) => movie.imdbID === selectedId
   )?.userRating;
-  console.log(isWatched);
 
   const {
     Title: title,
@@ -45,6 +44,19 @@ export function MovieDetails({
   }
 
   useEffect(() => {
+    function callback(e) {
+      if (e.key === `Escape`) {
+        onCloseMovie();
+      }
+    }
+    document.addEventListener(`keydown`, callback);
+
+    return function cleanUp() {
+      document.removeEventListener(`keydown`, callback);
+    };
+  }, [onCloseMovie]);
+
+  useEffect(() => {
     async function getMovieDetails() {
       setIsLoading(true);
       const res = await fetch(
@@ -56,6 +68,15 @@ export function MovieDetails({
     }
     getMovieDetails();
   }, [selectedId]);
+
+  useEffect(() => {
+    if (!title) return;
+    document.title = `${title} | Movie details`;
+
+    return function () {
+      document.title = "usePopcorn";
+    };
+  }, [title]);
 
   return (
     <div className="details" key={selectedId}>
