@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import StarRating from "./StarRating";
-import { API_KEY, Loader } from "./App.js";
+import { Loader } from "./App.js";
+import { API_KEY } from "../Hooks/useMovies.js";
+import { useKey } from "../Hooks/useKey.js";
 
 export function MovieDetails({
   selectedId,
@@ -43,18 +45,7 @@ export function MovieDetails({
     onCloseMovie();
   }
 
-  useEffect(() => {
-    function callback(e) {
-      if (e.key === `Escape`) {
-        onCloseMovie();
-      }
-    }
-    document.addEventListener(`keydown`, callback);
-
-    return function cleanUp() {
-      document.removeEventListener(`keydown`, callback);
-    };
-  }, [onCloseMovie]);
+  useKey("Escape", onCloseMovie);
 
   useEffect(() => {
     async function getMovieDetails() {
